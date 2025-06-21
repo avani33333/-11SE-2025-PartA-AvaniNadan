@@ -1,19 +1,14 @@
 class StationItem:
-    def __init__(self, name, description):
-        self._name = name
-        self._description = description
-
+    def __init__(self, name, description, usable=True):
+        self.name = name
+        self.description = description
+        self.usable = usable
+    
+    def use(self):
+        if self.usable:
+            return f"You use the {self.name}."
+        else:
+            return f"The {self.name} cannot be used right now."
+    
     def examine(self):
-        return self._description
-
-
-class DiagnosticTool(StationItem):
-    def __init__(self,name="Diagnostic Tool"):
-        super().__init__(name)
-        ("This diagnostic tool seems designed to interface with maintenance droids.")
-
-
-class EnergyCrystal(StationItem):
-    def __init__(self,name="Energy Crystal"):
-        super().__init__(name)
-        ("The crystal pulses with an unstable, vibrant energy.")
+        return self.description
