@@ -1,33 +1,29 @@
 from StationItem import StationItem
+
 class DiagnosticTool(StationItem):
-    def __init__(self, name="Diagnostic Tool", description="This diagnostic tool seems designed to interface with maintenance droids."):
-        super().__init__(name, description)
-        self.found = False
+    def __init__(self):
+        super().__init__(
+            name="Diagnostic Tool",
+            description="An outdated but functional diagnostic tool designed to interface with maintenance droids.",
+            usable=True
+        )
+        self.can_disable_droids = True
+    
+    def use_on_droid(self):
+        return "The diagnostic tool interfaces with the droid's systems."
+    
+    def run_diagnostic(self):
+        return "[Running Diagnostic Scan... ███████░░░ 70%]\nError Code: M-43X Detected\nStatus: Droid mobility subroutine malfunctioning." 
+    
+    def diagnostic_faults(self):
+        print("[Diagnostic Complete]")
+        print("Detected Faults:")
+        print("- Motor Controller Failure")
+        print("- Sensor Loop Error")
+        print("------------------------------------")
+        print("Location: Maintenance Tunnel")
+        print("1. Attempt to reboot motor controller ")
+        print("2. Bypass sensor loop ")
+        print("3. Exit diagnostic")
 
-    def find_room(self,room=True,check_locker=False):
-        if room == 1:
-            return "Rusty vending machines and overturned chairs. There’s a faint hum in the wall panels. Nothing of use here. Just stale energy bars and broken circuits."
-        elif room == 2:
-            return "Rows of old metal lockers line the wall. A few are open, others rusted shut. You search carefully..."
-            check_locker=True
-            continue
-
-        elif room == 3:
-            return " Crates and crates of defunct tech. It’s too cluttered to search thoroughly right now. Looks like a dead end."
-        else:
-            return "Enter a valid input (1-3)."
-
-    def check_locker(self, locker_number, room = 2):
-        if locker_number == 1:
-            self.found = False
-            return "Empty"
-
-        elif locker_number == 2:
-            self.found = False
-            return "Moldy boots"
-        elif locker_number == 3:
-            self.found = True
-            return "You found the Diagnostic Tool!"
-        else:
-            return "Enter a valid input (1-3)."
-
+        
