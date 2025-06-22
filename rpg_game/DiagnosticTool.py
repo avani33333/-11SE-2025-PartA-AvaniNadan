@@ -16,14 +16,14 @@ class DiagnosticTool(StationItem):
         return "[Running Diagnostic Scan... ███████░░░ 70%]\nError Code: M-43X Detected\nStatus: Droid mobility subroutine malfunctioning." 
     
     def diagnostic_faults(self):
-        print("[Diagnostic Complete]")
-        print("Detected Faults:")
-        print("- Motor Controller Failure")
-        print("- Sensor Loop Error")
-        print("------------------------------------")
-        print("Location: Maintenance Tunnel")
-        print("1. Attempt to reboot motor controller ")
-        print("2. Bypass sensor loop ")
-        print("3. Exit diagnostic")
+        return ("\033[1mDiagnostic Complete.\033[0m\n"
+                "Detected Faults:\n"
+                "- Motor Controller Failure\n"
+                "- Sensor Loop Error\n"
+                "\n------------------------------------\n"
+                "Location: Maintenance Tunnel\n"
+                "1. Attempt to reboot motor controller\n"
+                "2. Bypass sensor loop\n"
+                "3. Exit diagnostic")
 
         
