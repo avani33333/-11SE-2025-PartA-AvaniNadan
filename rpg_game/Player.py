@@ -1,3 +1,4 @@
+
 class Player: 
     def __init__(self, name: str, score: int = 0, hazards: int = 0): 
         self.name = name 
@@ -5,7 +6,8 @@ class Player:
         self.hazards = hazards 
         self.current_location = None 
         self.inventory = [] 
-        self.station_items = [] 
+        self.station_items = []  
+        self.crystal_picked_up = False  
     
     def show_status(self): 
         print(f"\033[1mStatus for Specialist {self.name}:\033[0m") 
@@ -17,9 +19,16 @@ class Player:
     
     def show_checklist(self): 
         print(f"\033[1m{self.name}'s Checklist:\033[0m") 
-        print("- Find a tool that can damage droids") 
-        print("- Find the energy crystal") 
-        print("- Reach the docking bay and type 'win' to complete the mission") 
+        if self.has_item("Diagnostic Tool"):
+            print("✓ Find a tool that can damage droids") 
+        else:
+            print("- Find a tool that can damage droids")
+        
+        if self.has_item("Energy Crystal"):
+            print("✓ Find the energy crystal")
+        else:
+            print("- Find the energy crystal")
+        print("- Reach the docking bay and type 'win' to complete the mission")
     
     def add_score(self, points: int): 
         self.score += points 
@@ -58,6 +67,6 @@ class Player:
         print("------------------------------------") 
         if self.current_location: 
             print(f"Location: {self.current_location.get_full_location_name()}") 
-        print("4: Inventory") 
-        print("5: Status") 
-        print("6: Checklist") 
+        print("I: Inventory") 
+        print("S: Status") 
+        print("C: Checklist") 
