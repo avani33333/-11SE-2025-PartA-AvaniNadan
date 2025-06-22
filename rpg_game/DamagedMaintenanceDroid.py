@@ -1,3 +1,5 @@
+import os
+
 class DamagedMaintenanceDroid:
     def __init__(self):
         self.name = "Damaged Maintenance Droid"
@@ -74,6 +76,6 @@ class DamagedMaintenanceDroid:
         elif option_repair == "2":
             return "Bypass failed. You must fix the motor controller first."
         elif option_repair == "3":
-            pass  # placeholder for now
+            self.use_tool(run_test, found)
         else:
             return "Invalid option. Please choose a valid repair option (1-3)."
