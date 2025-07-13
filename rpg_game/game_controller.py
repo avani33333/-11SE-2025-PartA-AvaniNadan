@@ -1,44 +1,21 @@
 import sys
 import os
 from player import Player
-from Location import MaintenanceTunnel
-from Location import BreakRoom
-from Location import LockerRoom
-from Location import StorageBay
-from Location import DockingBay
-from DamagedMaintenanceDroid import DamagedMaintenanceDroid
-from DiagnosticTool import DiagnosticTool
-from EnergyCrystal import EnergyCrystal
-from Location import MaintenanceTunnelEastCorridor
-from Location import CargoSection
-from Location import ConsoleRoom
-from Location import SupplyHub
-
-
-#PLAYER CONSTANTS
-PLAYER_SCORE = 0 
-HAZARDS_ENCOUNTERED = 0 
-
-#MESSAGE CONSTANTS
-GAME_MESSAGE = ( 
-"\nWelcome aboard, Specialist {player_name}." 
-"\nThe Celestial Outpost C.O.I.P.E.A. was last heard from 72 hours ago." 
-"\nNo life signs detected. All communication offline." 
-"\nThe only transmission received:" 
-"\n\033[3mSystem compromised… crystal stolen… droid malfunctioning...\033[0m" 
-"\nYou dock in the Maintenance Tunnels, the dim lights flickering above." 
-) 
-
-WELCOME_MESSAGE = ( 
-"\033[1mWELCOME TO MISSION COIPEA\033[0m\n" 
-"\nYou are a newly recruited tech specialist aboard the Celestial Outpost, " 
-"a deep-space engineering base that has gone dark after a system-wide failure. " 
-"As the only responder within range, you're tasked with investigating the critical failure, " 
-"clearing blocked paths, retrieving a rare energy crystal, and ensuring base recovery protocols are executed." 
-"\nTime is critical. Systems are unstable. Droids are malfunctioning." 
-"\nWe are relying on you to complete the mission." 
-"\n" 
-) 
+from location import MaintenanceTunnel
+from location import BreakRoom
+from location import LockerRoom
+from location import StorageBay
+from location import DockingBay
+from damaged_maintenance_droid import DamagedMaintenanceDroid
+from diagnostic_tool import DiagnosticTool
+from energy_crystal import EnergyCrystal
+from location import MaintenanceTunnelEastCorridor
+from location import CargoSection
+from location import ConsoleRoom
+from location import SupplyHub
+from constants import (
+    PLAYER_SCORE, HAZARDS_ENCOUNTERED, GAME_MESSAGE, WELCOME_MESSAGE, WEST_TUNNEL_MESSAGE, BACKPACK_OPTIONS, RUN_DIAGNOSTIC_OPTIONS, CHOICE_1_CARGO_SECTION, CHOICE_2_CARGO_SECTION, CHOICE_3_CARGO_SECTION, CHOICE_1_CONSOLE_ROOM, CHOICE_2_CONSOLE_ROOM, CHOICE_3_CONSOLE_ROOM, CHOICE_1_SUPPLY_HUB, CHOICE_2_SUPPLY_HUB, POINTS_REWARD_CRYSTAL, NO_POINTS_REWARD_CRYSTAL, TYPE_WIN_DOCKING_BAY, COMPLETED_GAME_MESSAGE
+)
 
 #clear the terminal screen
 def clear_screen() -> None: 
@@ -46,7 +23,7 @@ def clear_screen() -> None:
 
 #asks player to press enter to continue
 def press_enter() -> None: 
-    input("\nEnter: Continue") 
+    input("Enter: Continue") 
 
 class GameIntroduction: 
     def __init__(self, player=None) -> None: 
@@ -119,7 +96,8 @@ class RPGGameRun: #class for the main rpg to run
         
     
         self.player.show_backpack_options() # displays the backpack options for the player which includes inventory, status, and checklist
-    
+        print("------------------------------------")
+
     def move_player(self, location_key): #moves the player to a certain location based on which key
         if location_key in self.locations: #checks if the location_key is valid in the dictionary self.locations
             self.player.move_to_location(self.locations[location_key]) #gets the location from the dictionary and moves the player to that location
@@ -134,6 +112,7 @@ class RPGGameRun: #class for the main rpg to run
             self.move_player('storage_bay') 
         else: # status, inventory, checklist or invalid input
             self.handle_backpack_input(choice) 
+
     
     def handle_break_room_input(self, choice): 
         if choice == '' or choice.lower() == 'enter': 
@@ -164,17 +143,7 @@ class RPGGameRun: #class for the main rpg to run
     def handle_east_corridor_input(self, choice): # handles the input for the corridor with only a west and east pathway
         if choice == '1':  #West pathway (dead end)
             clear_screen()
-            print("You choose the West Tunnel.")
-            print("The hallway stretches forward into darkness.")
-            print("The lights overhead are long dead, and every step kicks up a layer of dust.")
-            print("Pipes rattle softly above, though nothing seems to be moving.")
-            print("Doesn't look like anyone's been down here in years…")
-            print("You walk a little farther… then stop.")
-            print("A collapsed beam blocks the path ahead. Chunks of ceiling tile and loose wires hang like vines.")
-            print("There's nowhere else to go.")
-            print("Dead end.")
-            print("You return back.")
-            print("Maybe the East path leads somewhere useful.")
+            print(WEST_TUNNEL_MESSAGE) #shows the west tunnel message
             press_enter()
             self.show_current_location()  # go back to pathway selections 
         elif choice == '2':  # east pathway (go to docking bay)
@@ -191,9 +160,9 @@ class RPGGameRun: #class for the main rpg to run
                 diagnostic_tool = DiagnosticTool()
                 self.player.add_station_item(diagnostic_tool) #adds the diagnostic tool to the player's inventory
                 self.player.add_score(10) #plus 10 points to the player's score
-                print("This diagnostic tool seems designed to interface with maintenance droids.") 
-                print("+ added to inventory") 
-                print(f"+ 10 points to score ") 
+                print("\033[94mThis diagnostic tool seems designed to interface with maintenance droids.\033[0m") 
+                print("\033[94m+ added to inventory\033[0m") 
+                print(f"\033[94m+ 10 points to score \033[0m") 
                 press_enter() 
                 self.trigger_droid_encounter() # triggers the droid encounter
                 break 
@@ -245,12 +214,9 @@ class RPGGameRun: #class for the main rpg to run
                 print("Invalid choice. Please enter 1 or 2.")
     
     def show_post_repair_options(self):
+        self.player.show_backpack_options()
+        press_enter()
         print("------------------------------------")
-        print("Location: Maintenance Tunnel")
-        print("I: Inventory")
-        print("S: Status")
-        print("C: Checklist")
-        print("\x1B[3mEnter: Continue \x1B[0m")
         
     def handle_droid_diagnostic(self):
         has_diagnostic_tool = self.player.has_item("Diagnostic Tool")
@@ -309,6 +275,7 @@ class RPGGameRun: #class for the main rpg to run
                             break 
                         else:
                             print("Invalid choice. Please enter 1, 2, or 3")
+                            clear_screen()
                     
                     continue
                     
@@ -322,11 +289,7 @@ class RPGGameRun: #class for the main rpg to run
                 else:
                     print("Invalid choice. Please enter 1 or 2.")
         else: #if the player tries to do the droid diagnostic without the diagnostic tool
-            print("Would you like to run a diagnostic test?")
-            print("------------------------------------")
-            print("Location: Maintenance Tunnel")
-            print("1: Yes")
-            print("2: No")
+            print(RUN_DIAGNOSTIC_OPTIONS)
             
             while True: #
                 choice = input("\nEnter your choice: ").strip()
@@ -378,34 +341,17 @@ class RPGGameRun: #class for the main rpg to run
     def handle_cargo_section_input(self, choice):
         if choice == '1':  # Bio-Specimens crate
             clear_screen()
-            print("You pry open the crate.")
-            print("\nInside:")
-            print("- Empty stasis jars")
-            print("- Broken cryo-pods")
-            print("- A labelled vial of something long since evaporated")
-            print("\nNothing to use in here.")
-            print("\nPress enter to continue back to the open crates scene")
+            print(CHOICE_1_CARGO_SECTION)
             input()
             self.show_current_location()
         elif choice == '2':  # Hazardous Tools box
             clear_screen()
-            print("You unlatch the metal box.")
-            print("\nInside:")
-            print("- A broken plasma cutter")
-            print("- Melted wiring")
-            print("- A manual titled: \"How to Handle High-Risk Repairs\" (most pages missing)")
-            print("\nPress enter to continue back to the open crates scene")
+            print(CHOICE_2_CARGO_SECTION)
             input()
             self.show_current_location()
         elif choice == '3':  # Research Debris container
             clear_screen()
-            print("You open the container and sift through wires and junk.")
-            print("\nFindings:")
-            print("- A snapped antenna")
-            print("- Cracked memory chips")
-            print("- A data slate with the message: \"Error 404 – Logs Not Found\"")
-            print("\nA pile of worthless junk")
-            print("\nPress enter to continue back to the open crates scene")
+            print(CHOICE_3_CARGO_SECTION)
             input()
             self.show_current_location()
         elif choice == '' or choice.lower() == 'enter':  # Return to docking bay
@@ -416,37 +362,17 @@ class RPGGameRun: #class for the main rpg to run
     def handle_console_room_input(self, choice):
         if choice == '1':  # Access the Logistics Terminal
             clear_screen()
-            print("You tap the blinking key.")
-            print("\nThe screen loads...")
-            print("\n> [CARGO INTAKE LOG – 27 DAYS AGO]")
-            print("> \"6x Power Cells, 14x Ration Crates, 1x Decorative Plant, 0x Crystal.\"")
-            print("\nPress enter to continue back to the console scene")
+            print(CHOICE_1_CONSOLE_ROOM)
             input()
             self.show_current_location() #current location of console room
         elif choice == '2':  # Check the Environmental Control Panel
             clear_screen()
-            print("You boot the panel.")
-            print("\nThe screen floods with flashing alerts:")
-            print("\n> `OXYGEN FLOW ERROR: FILTER FAILURE`")
-            print("> `TEMP STABILITY: CRITICAL LOW`")
-            print("> `CRYSTAL COOLANT: UNKNOWN`")
-            print("\nThat last one catches your eye… but when you click it:")
-            print("\n> [DATA CORRUPTED – FILE CANNOT LOAD]")
-            print("\nPress enter to continue back to the console scene")
+            print(CHOICE_2_CONSOLE_ROOM)
             input()
             self.show_current_location() #current location of console room
         elif choice == '3':  # Use the Security Console
             clear_screen()
-            print("You boot the terminal and wait as the screen stabilizes.")
-            print("\nAfter a moment, a video log blinks on screen.")
-            print("\n> `LAST ITEM TRANSPORTED:`")
-            print("> `Item: ENERGY CRYSTAL`")
-            print("> `Destination: SUPPLY AREA - Compartment 3`")
-            print("\nThe system beeps and displays a log:")
-            print("\n> `CRYSTAL HANDLED UNDER PROTOCOL 8421`")
-            print("> `Access Level: Specialist Clearance`")
-            print("\nThis may be useful.")
-            print("\nPress enter to continue back to the console scene")
+            print(CHOICE_3_CONSOLE_ROOM)
             input()
             self.show_current_location() #current location of console room
         elif choice == '' or choice.lower() == 'enter':  # Return to docking bay
@@ -457,23 +383,12 @@ class RPGGameRun: #class for the main rpg to run
     def handle_supply_hub_input(self, choice):
         if choice == '1':  # Search Shelf A1
             clear_screen()
-            print("You pull open the sliding shelf and rummage through it.")
-            print("\nInside:")
-            print("- A stack of empty crates")
-            print("- A faded sign that reads: \"DEFECTIVE - DO NOT REUSE\"")
-            print("- An ancient sandwich wrapper")
-            print("\nPress enter to go back to storage area scene")
+            print(CHOICE_1_SUPPLY_HUB)
             input()
             self.show_current_location() #current location of supply hub
         elif choice == '2':  # Search Shelf A2
             clear_screen()
-            print("Shelf A2 contains various power cores, some still glowing faintly.")
-            print("\nYou dig deeper…")
-            print("\nFindings:")
-            print("- Burnt wiring")
-            print("- An empty crystal stabilizer frame")
-            print("- A box labelled \"For Training Only\"")
-            print("\nPress enter to go back to storage area scene")
+            print(CHOICE_2_SUPPLY_HUB)
             input()
             self.show_current_location() #current location of supply hub
         elif choice == '3':  # Search Shelf A3 (has crystal)
@@ -512,11 +427,12 @@ class RPGGameRun: #class for the main rpg to run
                 energy_crystal = EnergyCrystal()
                 self.player.add_station_item(energy_crystal) #adds crystal in players inventory
                 self.player.add_score(50) # adds 50 points in players score
-                print("The crystal pulses with an unstable, vibrant energy.")
-                print("+crystal removed")
-                print("+50 points")
+                print(POINTS_REWARD_CRYSTAL)
+                print("------------------------------------")
                 self.player.show_backpack_options() #inventory, status, checklist
-                print("\x1B[3mEnter: Continue\x1B[0m")
+                press_enter()
+                print("------------------------------------")
+
                 while True:
                     post_choice = input("\nEnter your choice: ").strip()
                     if post_choice == '' or post_choice.lower() == 'enter':
@@ -537,11 +453,7 @@ class RPGGameRun: #class for the main rpg to run
                 print("Invalid choice. Please enter 1 or 2.")
     
     def show_crystal_return_pickup(self):
-        print("You return to Shelf A3 where the Energy Crystal still glows softly.")
-        print("The crystal pulses with an unstable, vibrant energy.")
-        print("\nWhat do you want to do?")
-        print("1: Pick it up")
-        print("2: Leave it")
+        print(CRYSTAL_PICKUP_MESSAGE)
         
         while True:
             choice = input("\nEnter your choice: ").strip()
@@ -549,11 +461,11 @@ class RPGGameRun: #class for the main rpg to run
                 clear_screen()
                 energy_crystal = EnergyCrystal()
                 self.player.add_station_item(energy_crystal) #adds energy crystal into the inventory
-                print("The crystal pulses with an unstable, vibrant energy.")
-                print("+crystal removed")
-                print("(No points awarded - you should have picked this up earlier!)")
+                print(NO_POINTS_REWARD_CRYSTAL)
+                print("------------------------------------")
                 self.player.show_backpack_options() # inventory, status, checklist
-                print("\x1B[3mEnter: Continue\x1B[0m")
+                print("------------------------------------")
+
                 while True:
                     post_choice = input("\nEnter your choice: ").strip()
                     if post_choice == '' or post_choice.lower() == 'enter':
@@ -577,31 +489,25 @@ class RPGGameRun: #class for the main rpg to run
             self.player.show_inventory()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("+50 points")
+            print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
         elif choice.upper() == 'S':  # Status
             print("\n")
             self.player.show_status()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("+50 points")
+            print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
         elif choice.upper() == 'C':  # Checklist
             print("\n")
             self.player.show_checklist()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("+50 points")
+            print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
 
     def handle_post_crystal_no_points_backpack_input(self, choice):
         if choice.upper() == 'I':  # Inventory
@@ -609,48 +515,34 @@ class RPGGameRun: #class for the main rpg to run
             self.player.show_inventory()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("(No points awarded - you should have picked this up earlier!)")
+            print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
         elif choice.upper() == 'S':  # Status
             print("\n")
             self.player.show_status()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("(No points awarded - you should have picked this up earlier!)")
+            print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
         elif choice.upper() == 'C':  # Checklist
             print("\n")
             self.player.show_checklist()
             press_enter()
             clear_screen()
-            print("The crystal pulses with an unstable, vibrant energy.")
-            print("+crystal removed")
-            print("(No points awarded - you should have picked this up earlier!)")
+            print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            print("\x1B[3mEnter: Continue\x1B[0m")
+            press_enter()
 
     def show_win_prompt(self):
         clear_screen()
-        print("You have arrived at the control console of the Docking Bay. Systems flicker back online.")
-        print("Location: Docking Bay (Supply Hub)")
-        print("Enter:")
-        print("If win is written:")
-        print("Type 'win' to complete your mission!")
+        print(TYPE_WIN_DOCKING_BAY)
         self.player.show_backpack_options()
 
     def show_win_prompt_without_crystal(self):
         clear_screen()
-        print("Reach the docking bay and type \"win\" to complete the mission (press enter to confirm)")
-        print("You have arrived at the control console of the Docking Bay. Systems flicker back online.")
-        print("")
-        print("Location: Docking Bay (Supply Hub)")
-        print("Enter:")
+        print(COMPLETED_GAME_MESSAGE)
         self.player.show_backpack_options()
 
     def handle_backpack_input(self, choice): 
@@ -768,7 +660,5 @@ class RPGGameRun: #class for the main rpg to run
                 if not self.in_droid_encounter:
                     self.show_current_location()
 
-# Start the game 
-if __name__ == "__main__": 
-    start_RPG = RPGGameRun() 
-    start_RPG.start_game()
+
+
