@@ -10,25 +10,25 @@ class Player:
         self.crystal_picked_up = False  
     
     def show_status(self): 
-        print(f"\033[1mStatus for Specialist {self.name}:\033[0m") 
-        print(f"Score: {self.score}") 
-        print(f"Hazards Encountered: {self.hazards}") 
+        print(f"\033[95m\033[1mStatus for Specialist {self.name}:\033[0m\033[0m") 
+        print(f"\033[95mScore: {self.score}\033[0m") 
+        print(f"\033[95mHazards Encountered: {self.hazards}\033[0m") 
         if self.current_location: 
-            print(f"Current Location: {self.current_location.get_full_location_name()}") 
-        print(f"Inventory: {', '.join(self.inventory) if self.inventory else 'Empty'}") 
+            print(f"\033[95mCurrent Location: {self.current_location.get_full_location_name()}\033[0m") 
+        print(f"\033[95mInventory: {', '.join(self.inventory) if self.inventory else 'Empty'}\033[0m") 
     
     def show_checklist(self): 
-        print(f"\033[1m{self.name}'s Checklist:\033[0m") 
+        print(f"\033[92m\033[1m{self.name}'s Checklist:\033[0m\033[0m") 
         if self.has_item("Diagnostic Tool"):
-            print("✓ Find a tool that can damage droids") 
+            print("\033[92m✓ Find a tool that can damage droids\033[0m") 
         else:
-            print("- Find a tool that can damage droids")
+            print("\033[92m- Find a tool that can damage droids\033[0m")
         
         if self.has_item("Energy Crystal"):
-            print("✓ Find the energy crystal")
+            print("\033[92m✓ Find the energy crystal\033[0m")
         else:
-            print("- Find the energy crystal")
-        print("- Reach the docking bay and type 'win' to complete the mission")
+            print("\033[92m- Find the energy crystal\033[0m")
+        print("\033[92m- Reach the docking bay and type 'win' to complete the mission\033[0m")
     
     def add_score(self, points: int): 
         self.score += points 
@@ -56,17 +56,15 @@ class Player:
         return None
     
     def show_inventory(self): 
-        print(f"\033[1m{self.name}'s Inventory:\033[0m") 
+        print(f"\033[91m\033[1m{self.name}'s Inventory:\033[0m\033[0m") 
         if self.inventory: 
             for item in self.inventory: 
-                print(f"- {item}") 
+                print(f"\033[91m- {item}\033[0m") 
         else: 
-            print("Empty") 
+            print("\033[91mEmpty\033[0m") 
     
     def show_backpack_options(self): 
         print("------------------------------------") 
-        if self.current_location: 
-            print(f"Location: {self.current_location.get_full_location_name()}") 
-        print("I: Inventory") 
-        print("S: Status") 
-        print("C: Checklist") 
+        print("\033[91mI: Inventory\033[0m") 
+        print("\033[95mS: Status\033[0m") 
+        print("\033[92mC: Checklist\033[0m")
