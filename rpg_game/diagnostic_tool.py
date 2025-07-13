@@ -1,4 +1,4 @@
-from StationItem import StationItem
+from station_item import StationItem
 
 class DiagnosticTool(StationItem):
     def __init__(self):
