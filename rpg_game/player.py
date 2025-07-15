@@ -15,8 +15,7 @@ class Player:
         print(f"\033[95mHazards Encountered: {self.hazards}\033[0m") 
         if self.current_location: 
             print(f"\033[95mCurrent Location: {self.current_location.get_full_location_name()}\033[0m") 
-        print(f"\033[95mInventory: {', '.join(self.inventory) if self.inventory else 'Empty'}\033[0m") 
-    
+
     def show_checklist(self): 
         print(f"\033[92m\033[1m{self.name}'s Checklist:\033[0m\033[0m") 
         if self.has_item("Diagnostic Tool"):
