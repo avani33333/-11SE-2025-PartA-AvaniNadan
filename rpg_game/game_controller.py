@@ -23,7 +23,7 @@ def clear_screen() -> None:
 
 #asks player to press enter to continue
 def press_enter() -> None: 
-    input("Enter: Continue") 
+    input("\033[3mEnter: Continue\033[0m") 
 
 class GameIntroduction: 
     def __init__(self, player=None) -> None: 
@@ -52,6 +52,8 @@ class RPGGameRun: #class for the main rpg to run
         self.droid_repaired = False
         self.crystal_encountered = False 
         self.crystal_left_behind = False  
+        self.tool_picked_up_before_droid = False
+        self.hazard_added = False
         self.locations = { 
             'central_hub': MaintenanceTunnel(), 
             'break_room': BreakRoom(), 
@@ -150,7 +152,7 @@ class RPGGameRun: #class for the main rpg to run
             self.move_player('docking_bay') # moves the player to the docking bay
         else:
             self.handle_backpack_input(choice) # status, inventory, checklist or invalid input
-    
+        
     def show_tool_pickup(self): # shows the diagnostic tool pickup scene in the locker room
         clear_screen() 
         self.locations['locker_room'].show_tool_pickup() # displays the tool pickup scene which is in the locker room class
@@ -158,11 +160,22 @@ class RPGGameRun: #class for the main rpg to run
             choice = input("\nEnter your choice: ").strip() 
             if choice == '1':  # Pick up the tool
                 diagnostic_tool = DiagnosticTool()
+                clear_screen()
                 self.player.add_station_item(diagnostic_tool) #adds the diagnostic tool to the player's inventory
-                self.player.add_score(10) #plus 10 points to the player's score
-                print("\033[94mThis diagnostic tool seems designed to interface with maintenance droids.\033[0m") 
-                print("\033[94m+ added to inventory\033[0m") 
-                print(f"\033[94m+ 10 points to score \033[0m") 
+                
+                # Only award points if the droid encounter hasn't been triggered yet
+                if not self.droid_encounter_triggered:
+                    self.player.add_score(10) #plus 10 points to the player's score
+                    self.tool_picked_up_before_droid = True
+                    print("\033[95mThis diagnostic tool seems designed to interface with maintenance droids.\033[0m") 
+                    print("\033[95m+ added to inventory\033[0m") 
+                    print(f"\033[95m+ 10 points to score \033[0m") 
+                else:
+                    print("\033[95mThis diagnostic tool seems designed to interface with maintenance droids.\033[0m") 
+                    print("\033[95m+ added to inventory\033[0m") 
+                    print(f"\033[95m(No points awarded - you should have picked this up earlier!)\033[0m") 
+                
+                print("-------------------------------------")
                 press_enter() 
                 self.trigger_droid_encounter() # triggers the droid encounter
                 break 
@@ -172,8 +185,12 @@ class RPGGameRun: #class for the main rpg to run
                 self.trigger_droid_encounter() # triggers the droid encounter
                 break 
             else: 
-                print("Invalid choice. Please enter 1 or 2.") 
-    
+                print("Invalid choice. Please enter 1 or 2.")
+                press_enter() 
+                clear_screen()
+                self.show_tool_pickup() # shows the tool pickup scene again if the input is invalid
+
+
     def trigger_droid_encounter(self): 
         self.droid_encounter_triggered = True 
         self.in_droid_encounter = True
@@ -181,43 +198,17 @@ class RPGGameRun: #class for the main rpg to run
         print(self.droid.show_initial_encounter()) # shows the initial encounter with the droid in the DamagedMaintenceDroid class
         input()
         clear_screen()
-        self.droid.show_blocked_message(add_hazard=True) # displays droid block message in DamagedMaintenceDroid class
-        self.player.add_hazard() #adds a +1 to players hazard status in player class
+        
+        # Add hazard counter increment here - only once when droid is first encountered
+        if not self.hazard_added:
+            self.player.add_hazard()  # This should increment the hazard counter
+            self.hazard_added = True  # Mark that hazard has been added
+        
+        self.droid.show_blocked_message(add_hazard=False)  # Don't add hazard in show_blocked_message
         input()
         clear_screen()
-        self.handle_droid_diagnostic() 
-    
-    def handle_return_to_locker_room(self): #getting diagnostic tool in the locker room
-        clear_screen()
-        print("You return to the locker room to retrieve the diagnostic tool.")
-        press_enter()
-        clear_screen()
-        self.locations['locker_room'].show_tool_pickup() #goes back to locker room to pick up diagnostic tool
-        
-        while True:
-            choice = input("\nEnter your choice: ").strip()
-            if choice == '1': #Picks up diagnostic tool
-                diagnostic_tool = DiagnosticTool() #creates a new instance for DiagnosticTool
-                self.player.add_station_item(diagnostic_tool) #adds the diagnostic tool to players inventory
-                print("You pick up the diagnostic tool.")
-                print("+ added to inventory")
-                print("(No points awarded - you should have picked this up earlier!)")
-                press_enter()
-                clear_screen()
-                self.handle_droid_diagnostic() #droid message
-                break
-            elif choice == '2': #leave the diagnostic tool
-                print("You need the diagnostic tool to proceed! You must pick it up.")
-                press_enter()
-                continue
-            else:
-                print("Invalid choice. Please enter 1 or 2.")
-    
-    def show_post_repair_options(self):
-        self.player.show_backpack_options()
-        press_enter()
-        print("------------------------------------")
-        
+        self.handle_droid_diagnostic()
+
     def handle_droid_diagnostic(self):
         has_diagnostic_tool = self.player.has_item("Diagnostic Tool")
         
@@ -228,8 +219,7 @@ class RPGGameRun: #class for the main rpg to run
                 if choice == '1': #'yes' run the test
                     diagnostic_tool = self.player.get_station_item("Diagnostic Tool") #get diagnostic tool
                     clear_screen()
-                    print(diagnostic_tool.run_diagnostic()) #runs the test
-                    press_enter()
+                    print(BACKPACK_OPTIONS) #runs the test
                     clear_screen()
 
                     while True:
@@ -240,13 +230,12 @@ class RPGGameRun: #class for the main rpg to run
                             clear_screen()
                             print(self.droid.run_diagnostic_test()) #fixed droid message
                             self.player.add_score(20) #adds 20 points to score
-                            print(f"+ 20 points to score ")
+                            print(f"\033[95m+ 20 points to score\033[0m")
                             print("\nThe path is now clear! You can continue your mission.")
-
                             self.droid_repaired = True 
                             self.in_droid_encounter = False
                             
-                            self.show_post_repair_options() #the corridor option of 2 pathways
+                            print(BACKPACK_OPTIONS) #the corridor option of 2 pathways
                             
                             while True:
                                 post_choice = input("\nEnter your choice: ").strip()
@@ -268,6 +257,7 @@ class RPGGameRun: #class for the main rpg to run
                             print("Exiting diagnostic mode.")
                             press_enter()
                             clear_screen()
+                            # Don't add hazard again - it was already added in trigger_droid_encounter
                             self.droid.show_blocked_message(add_hazard=False)
                             input()
                             clear_screen()
@@ -281,7 +271,8 @@ class RPGGameRun: #class for the main rpg to run
                     
                 elif choice == '2':  #don't run the diagnostic test
                     clear_screen()
-                    self.droid.show_blocked_message(add_hazard=False) #don't add another hazard to status
+                    # Don't add hazard again - it was already added in trigger_droid_encounter
+                    self.droid.show_blocked_message(add_hazard=False)
                     input()
                     clear_screen()
                     print(self.droid.show_diagnostic_options()) 
@@ -291,7 +282,7 @@ class RPGGameRun: #class for the main rpg to run
         else: #if the player tries to do the droid diagnostic without the diagnostic tool
             print(RUN_DIAGNOSTIC_OPTIONS)
             
-            while True: #
+            while True:
                 choice = input("\nEnter your choice: ").strip()
                 if choice == '1': 
                     print("You don't have the diagnostic tool! You need to find it first.")
@@ -308,6 +299,13 @@ class RPGGameRun: #class for the main rpg to run
                 else:
                     print("Invalid choice. Please enter 1 or 2.")
 
+    def handle_return_to_locker_room(self):
+        self.in_droid_encounter = False
+        self.move_player('locker_room')
+                
+    def show_post_repair_options(self):
+        print(BACKPACK_OPTIONS) #shows the backpack options after repairing the droid
+        
     def handle_post_repair_backpack_input(self, choice):
         if choice.upper() == 'I': #inventory
             print("\n")
@@ -393,6 +391,7 @@ class RPGGameRun: #class for the main rpg to run
             self.show_current_location() #current location of supply hub
         elif choice == '3':  # Search Shelf A3 (has crystal)
             self.show_crystal_pickup() #picks up the crystal
+            print("-------------------------------------")
         elif choice == '' or choice.lower() == 'enter':  # Return to docking bay
             # Check if crystal was encountered but not picked up
             if self.crystal_encountered and not self.player.has_item("Energy Crystal"):
@@ -401,13 +400,6 @@ class RPGGameRun: #class for the main rpg to run
                 self.move_player('docking_bay') #moves player to the docking bay
         else:
             self.handle_backpack_input(choice) # inventory, status, checklist
-    
-    def show_cannot_continue_message(self):
-        clear_screen()
-        print("You cannot continue without the crystal.")
-        print("You must return to Shelf A3 and pick up the Energy Crystal to complete your mission.")
-        press_enter()
-        self.show_current_location() #current location is supply hub
     
     def show_crystal_pickup(self):
         clear_screen()
@@ -422,67 +414,88 @@ class RPGGameRun: #class for the main rpg to run
         self.locations['supply_hub'].show_crystal_pickup()
         while True:
             choice = input("\nEnter your choice: ").strip()
-            if choice == '1':
+            if choice == '1':  # Pick up the crystal
                 clear_screen()
                 energy_crystal = EnergyCrystal()
-                self.player.add_station_item(energy_crystal) #adds crystal in players inventory
-                self.player.add_score(50) # adds 50 points in players score
+                self.player.add_station_item(energy_crystal)  # adds crystal in players inventory
+                self.player.add_score(50)  # adds 50 points in players score
                 print(POINTS_REWARD_CRYSTAL)
-                print("------------------------------------")
-                self.player.show_backpack_options() #inventory, status, checklist
-                press_enter()
+                print(BACKPACK_OPTIONS)
                 print("------------------------------------")
 
                 while True:
                     post_choice = input("\nEnter your choice: ").strip()
                     if post_choice == '' or post_choice.lower() == 'enter':
-                        self.show_win_prompt() 
+                        self.show_win_prompt()  # This should show the win prompt
                         return
                     elif post_choice.upper() in ['I', 'S', 'C']:
-                        self.handle_post_crystal_backpack_input(post_choice)  #inventory, status, checklist
+                        self.handle_post_crystal_backpack_input(post_choice)  # inventory, status, checklist
                     else:
                         print("Invalid choice. Please try again.")
                 break
-            elif choice == '2':
+            elif choice == '2':  # Leave it
                 self.crystal_left_behind = True  
-                print("You decide to leave the crystal for now.")
+                print("To continue with the mission, you must pick up the crystal.")
+                print("You cannot proceed without the Energy Crystal.")
                 press_enter()
-                self.show_current_location() #supply bay is current location
+                # Show the crystal pickup again but this time it will be the "return" version
+                self.show_crystal_return_pickup()
                 break
             else:
                 print("Invalid choice. Please enter 1 or 2.")
+                press_enter()
+                clear_screen()
+                self.show_crystal_first_pickup()
+        
+    def show_cannot_continue_message(self):
+        clear_screen()
+        print("To continue with the mission, you must pick up the crystal.")
+        print("You cannot proceed without the Energy Crystal.")
+        print("You must return to Shelf A3 and pick up the Energy Crystal to complete your mission.")
+        press_enter()
+        self.show_current_location() # current location is supply hub
     
     def show_crystal_return_pickup(self):
-        print(CRYSTAL_PICKUP_MESSAGE)
+        clear_screen()
+        print("The Energy Crystal is still here, glowing softly.")
+        print("You need this crystal to complete your mission.")
+        print("-------------------------------------")
+        print("\n\033[34m1. Pick up the Energy Crystal\033[0m")
+        print("\n\033[34m2. Leave the crystal\033[0m")
         
         while True:
             choice = input("\nEnter your choice: ").strip()
             if choice == '1':  
                 clear_screen()
                 energy_crystal = EnergyCrystal()
-                self.player.add_station_item(energy_crystal) #adds energy crystal into the inventory
+                self.player.add_station_item(energy_crystal) # adds energy crystal into the inventory
+                self.crystal_left_behind = False 
                 print(NO_POINTS_REWARD_CRYSTAL)
-                print("------------------------------------")
-                self.player.show_backpack_options() # inventory, status, checklist
+                print(BACKPACK_OPTIONS)
                 print("------------------------------------")
 
                 while True:
                     post_choice = input("\nEnter your choice: ").strip()
                     if post_choice == '' or post_choice.lower() == 'enter':
-                        self.show_win_prompt() #asks if you won
+                        self.show_win_prompt() # asks if you won
                         return
                     elif post_choice.upper() in ['I', 'S', 'C']: # inventory, status, checklist
-                        self.handle_post_crystal_no_points_backpack_input(post_choice) 
+                        self.handle_post_crystal_no_points_backpack_input(post_choice)
                     else:
                         print("Invalid choice. Please try again.")
                 break
             elif choice == '2':
-                print("You cannot continue without the crystal.")
+                print("To continue with the mission, you must pick up the crystal.")
+                print("You cannot proceed without the Energy Crystal.")
                 press_enter()
-                continue
+                clear_screen()
+                self.show_crystal_return_pickup()  # Keep showing until they pick it up
             else:
                 print("Invalid choice. Please enter 1 or 2.")
-
+                press_enter()
+                clear_screen()
+                self.show_crystal_return_pickup()
+                        
     def handle_post_crystal_backpack_input(self, choice):
         if choice.upper() == 'I':  # Inventory
             print("\n")
@@ -491,7 +504,6 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
         elif choice.upper() == 'S':  # Status
             print("\n")
             self.player.show_status()
@@ -499,7 +511,6 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
         elif choice.upper() == 'C':  # Checklist
             print("\n")
             self.player.show_checklist()
@@ -507,7 +518,6 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
 
     def handle_post_crystal_no_points_backpack_input(self, choice):
         if choice.upper() == 'I':  # Inventory
@@ -517,7 +527,6 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
         elif choice.upper() == 'S':  # Status
             print("\n")
             self.player.show_status()
@@ -525,7 +534,6 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
         elif choice.upper() == 'C':  # Checklist
             print("\n")
             self.player.show_checklist()
@@ -533,12 +541,81 @@ class RPGGameRun: #class for the main rpg to run
             clear_screen()
             print(NO_POINTS_REWARD_CRYSTAL)
             self.player.show_backpack_options()
-            press_enter()
 
     def show_win_prompt(self):
         clear_screen()
         print(TYPE_WIN_DOCKING_BAY)
         self.player.show_backpack_options()
+        
+        while True:
+            choice = input("\nEnter your choice: ").strip()
+            if choice.lower() == 'win':
+                # Handle the win condition
+                if (self.player.has_item("Diagnostic Tool") and 
+                    self.player.has_item("Energy Crystal")):
+                    self.player.add_score(30)
+                    clear_screen()
+                    if self.player.score == 110:
+                        print(f"Well done {self.player.name}, Mission Complete.")
+                        print("YOU HAVE WON!")
+                        print(f"Points Scored: {self.player.score}/110")
+                        print(f"Hazards Encountered: {self.player.hazards}/1")
+                        print("Thank you for restoring the Celestial Outpost.")
+                    else:
+                        print(f"Mission Failed, {self.player.name}.")
+                        print("The Celestial Outpost remains lost.")
+                        print("YOU HAVE LOST.")
+                        print(f"Points Scored: {self.player.score}/110")
+                        print(f"Hazards Encountered: {self.player.hazards}/1")
+                        print("Despite your efforts, the station has succumbed to the unknown.")
+                        print("Better luck next time, Specialist.")
+                    return True  # Signal to exit the game
+                else:
+                    missing_items = []
+                    if not self.player.has_item("Diagnostic Tool"):
+                        missing_items.append("- Find the diagnostic tool")
+                    if not self.player.has_item("Energy Crystal"):
+                        missing_items.append("- Find the energy crystal")
+                    
+                    print("You haven't completed all objectives yet!")
+                    if missing_items:
+                        print("Still needed:")
+                        for item in missing_items:
+                            print(item)
+                    press_enter()
+                    clear_screen()
+                    print(TYPE_WIN_DOCKING_BAY)
+                    self.player.show_backpack_options()
+                    continue
+            elif choice.upper() in ['I', 'S', 'C']:
+                # Handle backpack options at win prompt
+                if choice.upper() == 'I':
+                    print("\n")
+                    self.player.show_inventory()
+                    press_enter()
+                    clear_screen()
+                    print(TYPE_WIN_DOCKING_BAY)
+                    self.player.show_backpack_options()
+                elif choice.upper() == 'S':
+                    print("\n")
+                    self.player.show_status()
+                    press_enter()
+                    clear_screen()
+                    print(TYPE_WIN_DOCKING_BAY)
+                    self.player.show_backpack_options()
+                elif choice.upper() == 'C':
+                    print("\n")
+                    self.player.show_checklist()
+                    press_enter()
+                    clear_screen()
+                    print(TYPE_WIN_DOCKING_BAY)
+                    self.player.show_backpack_options()
+            else:
+                print("Invalid choice. Type 'win' to complete your mission, or use I/S/C for backpack options.")
+                press_enter()
+                clear_screen()
+                print(TYPE_WIN_DOCKING_BAY)
+                self.player.show_backpack_options()
 
     def show_win_prompt_without_crystal(self):
         clear_screen()
@@ -564,7 +641,7 @@ class RPGGameRun: #class for the main rpg to run
                 self.handle_droid_diagnostic()
             else:
                 self.show_current_location() 
-        elif choice.upper() == 'C': # Checklist 
+        elif choice.upper() == 'C':
             print("\n") 
             self.player.show_checklist() 
             press_enter() 
@@ -577,7 +654,7 @@ class RPGGameRun: #class for the main rpg to run
             if not self.in_droid_encounter:
                 print("Invalid choice. Please try again.") 
                 press_enter() 
-                self.show_current_location() 
+                self.show_current_location()
     
     def game_loop(self): 
         while True: 
@@ -587,26 +664,27 @@ class RPGGameRun: #class for the main rpg to run
                     if (self.player.has_item("Diagnostic Tool") and  #checks if player has diagnostic tool and energy crystal
                         self.player.has_item("Energy Crystal") and 
                         (self.player.current_location == self.locations['docking_bay'] or #checks if player is in a valid location
-                         self.player.current_location == self.locations['supply_hub'] or
-                         self.player.current_location == self.locations['cargo_section'] or
-                         self.player.current_location == self.locations['console_room'])):
+                        self.player.current_location == self.locations['supply_hub'] or
+                        self.player.current_location == self.locations['cargo_section'] or
+                        self.player.current_location == self.locations['console_room'])):
                         self.player.add_score(30) #{+30 points to players score}
                         clear_screen()
                         if self.player.score == 110: #if players score is 110 means they won
-                            print(f"Well done {self.player.name}, Mission Complete.")
-                            print("YOU HAVE WON!")
-                            print(f"Points Scored: {self.player.score}/110")
-                            print(f"Hazards Encountered: {self.player.hazards}/1")
-                            print("Thank you for restoring the Celestial Outpost.")
+                            print(f"\033[94mWell done {self.player.name}, Mission Complete.\033[0m")
+                            print("\033[94mYOU HAVE WON!\033[0m")
+                            print(f"\033[94mPoints Scored: {self.player.score}/110\033[0m")
+                            print(f"\033[94mHazards Encountered: {self.player.hazards}/1\033[0m")
+                            print("\033[94mThank you for restoring the Celestial Outpost.\033[0m")
+                            exit()
                         else: #anything less than the score = 110, means the player lost
-                            print(f"Mission Failed, {self.player.name}.")
-                            print("The Celestial Outpost remains lost.")
-                            print("YOU HAVE LOST.")
-                            print(f"Points Scored: {self.player.score}/110")
-                            print(f"Hazards Encountered: {self.player.hazards}/1")
-                            print("Despite your efforts, the station has succumbed to the unknown.")
-                            print("Better luck next time, Specialist.")
-                        break
+                            print(f"\033[94mMission Failed, {self.player.name}.\033[0m")
+                            print("\033[94mThe Celestial Outpost remains lost.\033[0m")
+                            print("\033[94mYOU HAVE LOST.\033[0m")
+                            print(f"\033[94mPoints Scored: {self.player.score}/110\033[0m")
+                            print(f"\033[94mHazards Encountered: {self.player.hazards}/1\033[0m")
+                            print("\033[94mDespite your efforts, the station has succumbed to the unknown.\033[0m")
+                            print("\033[94mBetter luck next time, Specialist.\033[0m")
+                            exit()
                     else:
                         missing_items = [] #creates a list that states to the player what objectives are incomplete
                         if not self.player.has_item("Diagnostic Tool"):
@@ -659,6 +737,3 @@ class RPGGameRun: #class for the main rpg to run
                 press_enter() 
                 if not self.in_droid_encounter:
                     self.show_current_location()
-
-
-
