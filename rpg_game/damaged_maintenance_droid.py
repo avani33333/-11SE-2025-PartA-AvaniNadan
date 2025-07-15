@@ -11,44 +11,47 @@ class DamagedMaintenanceDroid:
     def show_initial_encounter(self):
         return ("You reach the east corridor — the only accessible path — but a damaged maintenance droid is guarding it.\n"
                 "------------------------------------\n"
-                "Location: Maintenance Tunnel\n"
-                "\x1B[3mEnter: Move east and try to sneak past\x1B[0m")
+                "\033[1mLocation: Maintenance Tunnel\033[0m\n"
+                "\n\x1B[3m\033[34mEnter: Move east and try to sneak past\x1B[0m\033[0m"
+                "\n------------------------------------\n")
     
     def show_blocked_message(self, add_hazard=True):
         print("The droid is blocking the way.")
         if add_hazard:
-            print("\033[34m+1 hazard\033[0m")
+            print("\033[95m+1 hazard\033[0m")
         print("------------------------------------")
-        print("Location: Maintenance Tunnel")
-        print("\x1B[3mEnter: Use Diagnostic Tool to disable\x1B[0m")
-    
+        print("\033[1mLocation: Maintenance Tunnel\033[0m\n")
+        print("\x1B[3m\033[34mEnter: Use Diagnostic Tool to disable\x1B[0m\033[0m")
+        print("\n------------------------------------\n")
+
     def show_diagnostic_options(self):
         return ("Would you like to run a diagnostic test?\n"
                 "------------------------------------\n"
-                "Location: Maintenance Tunnel\n"
-                "1: Yes\n"
-                "2: No")
+                "\033[1mLocation: Maintenance Tunnel\033[0m\n"
+                "\033[94m1: Yes\n"
+                "2: No\033[0m"
+                "\n------------------------------------\n")
     
     def attempt_diagnostic(self, player_has_tool):
         if player_has_tool:
-            return "diagnostic_options"
+            return "\033[91mdiagnostic_options\033[0m"
         else:
-            return "no_tool_available"
+            return "\033[91mno_tool_available\033[0m"
     
     def run_diagnostic_test(self):
         self.is_disabled = True
         self.is_blocking = False
         self.diagnostic_attempted = True
-        return ("\n\033[34mAttempting reboot...\033[0m"
-                "\n\033Reboot successful!\033[0m"
-                "Mobility partially restored.")
+        return ("\n\033[32m\033[1mAttempting reboot..."
+                "\nReboot successful!\033[0m\033[0m"
+                "\nMobility partially restored.")
     
     def is_path_clear(self):
         return not self.is_blocking
     
     def use_tool(self, run_test, found=True):
         if run_test == "1" and found == True:
-            return "\033[34m[Running Diagnostic Scan... ███████░░░ 70%]\nError Code: M-43X Detected\nStatus: Droid mobility subroutine malfunctioning.\033[0m"
+            return "\033[32m\033[1mRunning Diagnostic Scan... ███████░░░ 70%]\nError Code: M-43X Detected\nStatus: Droid mobility subroutine malfunctioning.\033[0m"
         elif run_test == "1" and found == False:
             return "You do not own a diagnostic tool. You need to find one to proceed."
         elif run_test == "2" and found == True:
@@ -70,11 +73,11 @@ class DamagedMaintenanceDroid:
             self.is_blocking = False
             self.is_disabled = True
             self.diagnostic_attempted = True
-            return ("\n\033[34mAttempting reboot...\033[0m"
-                   "\n\033[34mReboot successful!\033[0m"
-                   "Mobility partially restored.")
+            return ("\n\033[32mAttempting reboot...\033[0m"
+                   "\n\033[32mReboot successful!\033[0m"
+                   "\nMobility partially restored.")
         elif option_repair == "2":
-            return "Bypass failed. You must fix the motor controller first."
+            return "Bypass failed.\n\033[32mYou must fix the motor controller first.\033[0m"
         elif option_repair == "3":
             self.use_tool(run_test, found)
         else:
