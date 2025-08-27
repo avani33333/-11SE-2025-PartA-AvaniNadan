@@ -7,18 +7,17 @@ class DiagnosticTool(StationItem):
             description="\033[95mAn outdated but functional diagnostic tool designed to interface with maintenance droids.\033[0m",
             usable=True
         )
-        self.can_disable_droids = True
-    
-    def use_on_droid(self):
-        return "The diagnostic tool interfaces with the droid's systems."
-    
+        self.can_disable_droids = True  # Indicates if the tool can disable droids.
+
     def run_diagnostic(self):
+        """Runs a diagnostic scan on the droid and returns the status."""
         return ("\033[32m[Running Diagnostic Scan... ███████░░░ 70%]"
                 "\nError Code: M-43X Detected"
                 "\nStatus: Droid mobility subroutine malfunctioning.\033[0m"
                 "\n--------------------------------------\n")
     
     def diagnostic_faults(self):
+        """Displays the faults detected in the droid."""
         return ("\033[32mDiagnostic Complete.\033[0m\n"
                 "Detected Faults:\n"
                 " -Motor Controller Failure\n"
@@ -28,5 +27,3 @@ class DiagnosticTool(StationItem):
                 "\033[34m1. Attempt to reboot motor controller\n"
                 "2. Bypass sensor loop\n"
                 "3. Exit diagnostic\033[0m")
-
-        
