@@ -118,7 +118,6 @@ class RPGGameRun:
         if location_key in self.locations:
             self.player.move_to_location(self.locations[location_key])  # Gets the location from the dictionary and moves the player to that location
             self.show_current_location()  # Displays the new location.
-        else:
     
     def handle_central_hub_input(self, choice):
         """Handles the input when player is in the central hub location."""
