@@ -1,4 +1,4 @@
-from StationItem import StationItem
+from station_item import StationItem
 
 class EnergyCrystal(StationItem):
     def __init__(self):
@@ -7,7 +7,6 @@ class EnergyCrystal(StationItem):
             description="A rare energy crystal that powers the station's core systems. It pulses with a faint blue light.",
             usable=False
         )
-        self.mission_critical = True
+        self.mission_critical = True  # Indicates if the crystal is critical for mission completion.
     
-    def activate(self):
-        return "The energy crystal pulses brighter, ready restore station power."
+
